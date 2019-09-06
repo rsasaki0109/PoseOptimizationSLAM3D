@@ -4,7 +4,7 @@
 1. Download data  
 
 ~~~
-python pose_optimization_slam_3d.py
+python data_downloader.py
 ~~~
 
 2. run SLAM 
