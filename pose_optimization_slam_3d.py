@@ -16,10 +16,13 @@ from scipy.sparse import linalg
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+from numba import jit
+
 est_traj_fig = plt.figure()
 ax = est_traj_fig.add_subplot(111, projection='3d')
 
 def skew_symmetric(v):
+
     return np.array(
         [[0, -v[2], v[1]],
          [v[2], 0, -v[0]],
@@ -27,6 +30,7 @@ def skew_symmetric(v):
     )
 
 def robust_coeff(squared_error, delta):
+
     if (squared_error < 0): 
         return 0
     sqre = np.sqrt(squared_error)
@@ -74,6 +78,7 @@ class Optimizer3D:
                 plt.cla()
                 plot_nodes(nodes, ax, color="-b")
                 plot_nodes(graph_nodes, ax)
+                #plt.show()
                 plt.pause(1.0)
 
         return graph_nodes
@@ -84,7 +89,7 @@ class Optimizer3D:
         numnodes = len(graph_nodes)
         bf = np.zeros(numnodes * self.dim)
         tripletList = TripletList()
-
+        
         for con in constraints:
             ida = con.id1
             idb = con.id2
@@ -131,6 +136,7 @@ class Optimizer3D:
         out_nodes = []
 
         for i in range(len(graph_nodes)):
+
             u_i = i * self.dim
             
             q_before = Quaternion(graph_nodes[i].qw, graph_nodes[i].qx, graph_nodes[i].qy, graph_nodes[i].qz)
@@ -154,6 +160,7 @@ class Optimizer3D:
         return cost, out_nodes
 
     def calc_global_cost(self, nodes, constraints):
+
         cost = 0.0
         for c in constraints:
             diff = self.error_func(nodes[c.id1], nodes[c.id2], c.t)
@@ -163,6 +170,7 @@ class Optimizer3D:
         return cost
 
     def error_func(self, pa, pb, t):
+
         ba = pb.ominus(pa)
         q = t.rv().toQuaternion().conjugate().quat_mult(ba.rv().toQuaternion(), out = 'Quaternion')
         drv = RotVec(quaternion = q)
@@ -175,6 +183,7 @@ class Optimizer3D:
         return error
 
     def dQuat_dRV(self, rv):
+
         u1 = rv.ax; u2 = rv.ay; u3 = rv.az
         v = np.sqrt(u1**2 + u2**2 + u3**2)
         if v < 1e-6:
@@ -201,6 +210,7 @@ class Optimizer3D:
         return dqu
 
     def dR_dRV(self, rv):
+
         q = rv.toQuaternion()
         qw = q.qw;qx = q.qx; qy = q.qy;qz = q.qz
         dRdqw = 2 * np.array(
@@ -228,26 +238,30 @@ class Optimizer3D:
         duy = dRdqw * dqdu[0,1] + dRdqx * dqdu[1, 1] + dRdqy * dqdu[2, 1] + dRdqz * dqdu[3, 1]
         duz = dRdqw * dqdu[0,2] + dRdqx * dqdu[1, 2] + dRdqy * dqdu[2, 2] + dRdqz * dqdu[3, 2]
         return dux, duy, duz
-
+    
     def dRV_dQuat(self, q):
+        
+        qw = q.qw[0]; qx = q.qx[0]; qy = q.qy[0]; qz = q.qz[0]
 
-        if 1 - q.qw**2 < 1e-7:
+        if 1 - qw**2 < 1e-7:
             ret = np.array(
             [[ 0.0, 2.0, 0.0, 0.0],
              [ 0.0, 0.0, 2.0, 0.0],
              [ 0.0, 0.0, 0.0, 2.0]]
             )
             return ret
-        c = 1/(1 - q.qw**2)
-        d = np.arccos(q.qw)/(np.sqrt(1-q.qw**2))
+        
+        c = 1/(1 - qw**2)
+        d = np.arccos(qw)/(np.sqrt(1-qw**2))
         ret = 2.0 * np.array(
-            [[ c*q.qx*(d*q.qw-1),   d, 0.0, 0.0],
-             [ c*q.qy*(d*q.qw-1), 0.0,   d, 0.0],
-             [ c*q.qz*(d*q.qw-1), 0.0, 0.0,   d]]
+            [[ c*qx*(d*qw-1),   d, 0.0, 0.0],
+             [ c*qy*(d*qw-1), 0.0,   d, 0.0],
+             [ c*qz*(d*qw-1), 0.0, 0.0,   d]]
             )
         return ret
 
     def QMat(self, q):
+
         qw = q.qw; qx = q.qx; qy = q.qy; qz = q.qz
         Q = np.array(
             [[ qw, -qx, -qy, -qz],
@@ -258,6 +272,7 @@ class Optimizer3D:
         return Q
 
     def QMatBar(self, q):
+
         qw = q.qw; qx = q.qx; qy = q.qy; qz = q.qz
         Q = np.array(
             [[ qw, -qx, -qy, -qz],
@@ -268,6 +283,7 @@ class Optimizer3D:
         return Q
 
     def calc_error(self, pa, pb, t):
+
         e0 = self.error_func(pa, pb, t)
         Ja = np.identity(6); Jb = np.identity(6) 
 
@@ -298,6 +314,7 @@ class Optimizer3D:
         return e0, Ja, Jb
 
 class Quaternion:
+
     def __init__(self, qw, qx, qy, qz):
         self.qw = qw; self.qx = qx; self.qy = qy; self.qz = qz  
     
@@ -323,6 +340,7 @@ class Quaternion:
     
 
 class RotVec:
+
     def __init__(self, ax=0., ay=0., az=0., quaternion=None):
         if quaternion is None:
             self.ax = ax; self.ay = ay; self.az = az
@@ -339,9 +357,11 @@ class RotVec:
                 self.az = z / norm_im * th
 
     def inverted(self):
+
         return RotVec(-self.ax, -self.ay, -self.az)
 
     def toRotationMatrix(self):
+
         q = self.toQuaternion()
         q_vec =  np.array([q.qx, q.qy, q.qz]).reshape(3,1)
         qw = q.qw
@@ -350,6 +370,7 @@ class RotVec:
         return mat.T
     
     def toQuaternion(self):
+
         v = np.sqrt(self.ax**2 + self.ay**2 + self.az**2)
         if (v < 1e-6):
             return Quaternion(1, 0, 0, 0)
@@ -358,6 +379,7 @@ class RotVec:
                             np.sin(v/2)*self.ay/v, np.sin(v/2)*self.az/v)
 
     def pi2pi(self, rad):
+
         val = np.fmod(rad, 2.0 * np.pi)
         if val > np.pi:
             val -= 2.0 * np.pi
@@ -366,7 +388,6 @@ class RotVec:
 
         return val
     
-
 
 class TripletList:
 
@@ -409,12 +430,24 @@ class Constrant3D:
         self.info_mat = info_mat
 
 def plot_nodes(nodes, ax, color ="-r", label = ""):
+
     x, y, z = [], [], []
     for n in nodes:
         x.append(n.x); y.append(n.y); z.append(n.z)
+    x = np.array(x)
+    y = np.array(y)
+    z = np.array(z)
+    max_range = np.array([x.max()-x.min(), y.max()-y.min(), z.max()-z.min()]).max() / 2.0
+    mid_x = (x.max()+x.min()) * 0.5
+    mid_y = (y.max()+y.min()) * 0.5
+    mid_z = (z.max()+z.min()) * 0.5
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
     ax.plot(x, y, z, color, label=label)
 
 def load_data(fname):
+
     nodes, consts = [], []
 
     for line in open(fname):
@@ -481,11 +514,12 @@ def load_data(fname):
 
 
 def main():
+    
     print("start!!")
 
-    fnames = ["parking-garage.g2o"]
+    fnames = ["parking-garage.g2o",]
 
-    max_iter = 20
+    max_iter = 15
     min_iter = 3
 
     # parameter setting
@@ -493,6 +527,7 @@ def main():
     optimizer.p_lambda = 1e-6
     optimizer.verbose = True
     optimizer.animation = True
+
     
     for f in fnames:
         print(f)
@@ -511,7 +546,7 @@ def main():
         plot_nodes(final_nodes, ax, label="after")
         plt.show()
 
-        print("done!!")
+    print("done!!")
 
 if __name__ == '__main__':
     main()
