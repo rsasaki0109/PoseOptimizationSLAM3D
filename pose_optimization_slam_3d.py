@@ -1,3 +1,13 @@
+/****************************************************************************
+ * This code is written by reference to [p2o(Petite Portable Pose-graph Optimizer)](https://github.com/furo-org/p2o)
+ * Copyright (C) 2010-2017 Kiyoshi Irie
+ * Copyright (C) 2017 Future Robotics Technology Center (fuRo),
+ *                    Chiba Institute of Technology.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/.
+ ****************************************************************************/
 """
 3D (x, y, z, qw, qx, qy, qz) pose optimization SLAM
 
@@ -11,8 +21,6 @@ Ref:
 
 - [GitHub \- AtsushiSakai/PythonRobotics
 /SLAM/PoseOptimizationSLAM](https://github.com/AtsushiSakai/PythonRobotics/blob/master/SLAM/PoseOptimizationSLAM/pose_optimization_slam.py)
-
-
 """
 
 import os
