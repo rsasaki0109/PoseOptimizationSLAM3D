@@ -569,6 +569,8 @@ def main():
 
     fnames = [
          "parking-garage.g2o",
+         "sphere2200.g2o",
+         "torus3d.g2o",
     ]
 
     max_iter = 10
