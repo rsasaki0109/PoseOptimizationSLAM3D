@@ -244,7 +244,7 @@ class Optimizer3D:
         dRdqz = 2 * np.array(
             [[-qz, -qw, qx],
              [qw, -qz, -qy],
-             [qz, qy, qz]]
+             [qx, qy, qz]]
         )
         dqdu = self.dQuat_dRV(rv)
         dux = dRdqw * dqdu[0, 0] + dRdqx * dqdu[1, 0] + dRdqy * dqdu[2, 0] + dRdqz * dqdu[3, 0]
