@@ -4,13 +4,13 @@
 1. Download data  
 
 ~~~
-python data_downloader.py
+python script/data_downloader.py
 ~~~
 
 2. run SLAM 
 
 ~~~
-python pose_optimization_slam_3d.py
+python script/pose_optimization_slam_3d.py
 ~~~
 
 # Result
